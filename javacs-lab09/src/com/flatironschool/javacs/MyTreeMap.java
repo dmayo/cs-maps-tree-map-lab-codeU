@@ -10,6 +10,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 /**
  * Implementation of a Map using a binary search tree.
@@ -43,6 +44,12 @@ public class MyTreeMap<K, V> implements Map<K, V> {
 			this.key = key;
 			this.value = value;
 		}
+		public void setLeft(Node left){
+			this.left=left;
+		}
+		public void setRight(Node right){
+			this.right=right;
+		}
 	}
 		
 	@Override
@@ -70,9 +77,21 @@ public class MyTreeMap<K, V> implements Map<K, V> {
 		// something to make the compiler happy
 		@SuppressWarnings("unchecked")
 		Comparable<? super K> k = (Comparable<? super K>) target;
-		
+
 		// the actual search
-        // TODO: Fill this in.
+		Node currentNode = root;
+        while(currentNode!=null){
+        	int cmp = k.compareTo(currentNode.key);
+        	if(cmp==0){
+        		return currentNode;
+        	}
+        	else if(cmp<0){
+        		currentNode=currentNode.left;
+        	}
+        	else{
+        		currentNode=currentNode.right;
+        	}
+        }
         return null;
 	}
 
@@ -92,7 +111,16 @@ public class MyTreeMap<K, V> implements Map<K, V> {
 
 	@Override
 	public boolean containsValue(Object target) {
-		return false;
+		return containsValueHelper(root,target);
+	}
+	private boolean containsValueHelper(Node currentNode, Object target){
+		if(currentNode==null){
+			return false;
+		}
+		if(equals(currentNode.value,target)){
+			return true;
+		}
+		return containsValueHelper(currentNode.left, target)||containsValueHelper(currentNode.left, target);
 	}
 
 	@Override
@@ -117,7 +145,21 @@ public class MyTreeMap<K, V> implements Map<K, V> {
 	@Override
 	public Set<K> keySet() {
 		Set<K> set = new LinkedHashSet<K>();
-        // TODO: Fill this in.
+        Stack<Node> stack = new Stack<Node>();
+        Node currentNode = root;
+ 
+        while(currentNode != null||!stack.empty() ){
+            if(currentNode != null){
+                stack.push(currentNode);
+                currentNode = currentNode.left;
+            }
+            else{
+                Node nextNode = stack.pop();
+                set.add(nextNode.key);
+                currentNode = nextNode.right;
+            }
+        }
+ 
 		return set;
 	}
 
@@ -135,8 +177,49 @@ public class MyTreeMap<K, V> implements Map<K, V> {
 	}
 
 	private V putHelper(Node node, K key, V value) {
-        // TODO: Fill this in.
-        return null;
+        Node foundNode = findNode(key);
+        if(foundNode!=null){
+        	V oldValue = foundNode.value;
+        	foundNode.value=value;
+        	return oldValue;
+        }
+        else{
+        	size++;
+        	@SuppressWarnings("unchecked")
+			Comparable<? super K> k = (Comparable<? super K>) key;
+
+			// the actual search
+			Node currentNode = node;
+			int cmp=0;
+	        while(currentNode!=null){
+	        	cmp = k.compareTo(currentNode.key);
+
+	        	if(cmp==0){
+	        		break;
+	        	}
+				else if(cmp<0){
+	        		if(currentNode.left!=null){
+	        			currentNode=currentNode.left;
+	        		}
+	        		else{
+	        			currentNode.setLeft(new Node(key,value));
+	        			break;
+	        		}
+	        		
+	        	}
+	        	else{
+	        		if(currentNode.right!=null){
+	        			currentNode=currentNode.right;
+	        		}
+	        		else{
+	        			currentNode.setRight(new Node(key,value));
+	        			break;
+	        		}
+	        		
+	        	}
+	        }
+	        return null;
+        }
 	}
 
 	@Override
